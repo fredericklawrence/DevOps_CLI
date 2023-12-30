@@ -86,10 +86,9 @@ def setup_ubuntu_server():
         username = input("Enter the username to use for SSH key operations: ")
 
     # RSA key generation and authentication
-    if not os.path.exists("/home/{}/.ssh/id_rsa".format(username)):
-        generate_rsa_key_pair(username)
-
-    add_public_key_to_authorized_keys(username)
+    generate_rsa_key_pair(username)  # Generate key pair first
+    add_public_key_to_authorized_keys(username)  # Then access the public key
+    
     configure_ssh(username)
 
     display_public_key(username)  # Show the generated public key
