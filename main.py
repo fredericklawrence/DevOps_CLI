@@ -37,13 +37,16 @@ def add_public_key_to_authorized_keys(username):
         authorized_keys.write(public_key + "\n")
 
 def configure_ssh():
-    """Configures SSH with secure settings using UFW."""
+    """Configures SSH with secure settings, disabling password authentication."""
 
     # Disable password authentication
     subprocess.run(["sudo", "sed", "-i", "s/^PasswordAuthentication yes/PasswordAuthentication no/", "/etc/ssh/sshd_config"])
 
     # Disable root login
     subprocess.run(["sudo", "sed", "-i", "s/#PermitRootLogin yes/PermitRootLogin no/", "/etc/ssh/sshd_config"])
+
+    # Disable PAM authentication
+    subprocess.run(["sudo", "sed", "-i", "s/^UsePAM yes/UsePAM no/", "/etc/ssh/sshd_config"])
 
     # Implement rate limiting (using UFW)
     subprocess.run(["sudo", "ufw", "limit", "ssh/tcp", "6/min"])
@@ -61,7 +64,7 @@ def configure_ssh():
 
     # Restart SSH service
     subprocess.run(["sudo", "systemctl", "restart", "ssh"])
-
+    
 def setup_ubuntu_server():
     """Performs essential setup tasks, using prompted username."""
 
