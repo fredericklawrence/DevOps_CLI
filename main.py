@@ -37,9 +37,10 @@ def setup_ubuntu_server():
 
 
     # 3. Create a non-root user with sudo privileges
-    username = input("Enter a username for the new user: ")
-    subprocess.run(["sudo", "useradd", "-m", "-s", "/bin/bash", username])
-    subprocess.run(["sudo", "adduser", username, "sudo"])
+    if input("Do you want to create a new non-root user? (y/n): ").lower() == "y":
+        username = input("Enter a username for the new user: ")
+        subprocess.run(["sudo", "useradd", "-m", "-s", "/bin/bash", username])
+        subprocess.run(["sudo", "adduser", username, "sudo"])
 
     # 4. Configure SSH (optional)
     if input("Do you want to configure SSH? (y/n): ").lower() == "y":
