@@ -16,8 +16,16 @@ def install_packages(packages):
     subprocess.run(["sudo", "apt", "install", "-y"] + packages)
 
 def generate_rsa_key_pair(username):
-    """Generates an RSA key pair for the specified username."""
-    key_path = "/home/{}/.ssh/id_rsa".format(username)
+    """Generates an RSA key pair for the specified username, creating the .ssh directory if needed."""
+
+    # Create .ssh directory if it doesn't exist
+    home_dir = "/home/{}".format(username)
+    ssh_dir = os.path.join(home_dir, ".ssh")
+    if not os.path.exists(ssh_dir):
+        os.makedirs(ssh_dir, mode=0o700)  # Set secure permissions
+
+    # Generate the key pair
+    key_path = os.path.join(ssh_dir, "id_rsa")
     if not os.path.exists(key_path):
         subprocess.run(["ssh-keygen", "-t", "rsa", "-b", "4096", "-f", key_path, "-q"])
 
@@ -88,7 +96,7 @@ def setup_ubuntu_server():
     # RSA key generation and authentication
     generate_rsa_key_pair(username)  # Generate key pair first
     add_public_key_to_authorized_keys(username)  # Then access the public key
-    
+
     configure_ssh(username)
 
     display_public_key(username)  # Show the generated public key
