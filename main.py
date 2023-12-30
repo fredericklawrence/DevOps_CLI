@@ -39,7 +39,7 @@ def configure_ssh():
 
     # Restart SSH service
     subprocess.run(["sudo", "systemctl", "restart", "ssh"])
-    
+
 def setup_ubuntu_server():
     """Performs essential setup tasks on a new Ubuntu server."""
 
@@ -54,11 +54,6 @@ def setup_ubuntu_server():
     if input("Do you want to configure SSH? (y/n): ").lower() == "y":
         # Allow public key authentication, disable password authentication, and other security measures
         configure_ssh()
-
-    # 5. Set up a firewall (optional)
-    if input("Do you want to enable UFW firewall? (y/n): ").lower() == "y":
-        subprocess.run(["sudo", "ufw", "enable"])
-        # Allow necessary ports (SSH, HTTP, HTTPS, etc.)
 
     # Install essential packages (example)
     essential_packages = ["python3", "python3-pip", "git", "ufw", "fail2ban"]
