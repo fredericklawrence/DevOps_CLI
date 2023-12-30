@@ -1,4 +1,19 @@
 import subprocess
+
+def update_packages():
+    """Updates package lists and upgrades packages."""
+    subprocess.run(["sudo", "apt", "update"])
+    subprocess.run(["sudo", "apt", "upgrade", "-y"])
+
+def create_user(username):
+    """Creates a new non-root user with sudo privileges."""
+    subprocess.run(["sudo", "useradd", "-m", "-s", "/bin/bash", username])
+    subprocess.run(["sudo", "adduser", username, "sudo"])
+
+def install_packages(packages):
+    """Installs specified packages."""
+    subprocess.run(["sudo", "apt", "install", "-y"] + packages)
+
 def configure_ssh():
     """Configures SSH with secure settings using UFW."""
 
@@ -24,24 +39,17 @@ def configure_ssh():
 
     # Restart SSH service
     subprocess.run(["sudo", "systemctl", "restart", "ssh"])
+    
 def setup_ubuntu_server():
     """Performs essential setup tasks on a new Ubuntu server."""
 
-    # 1. Update package lists and upgrade packages
-    subprocess.run(["sudo", "apt", "update"])
-    subprocess.run(["sudo", "apt", "upgrade", "-y"])
-
-    # 2. Install essential packages
-    essential_packages = ["python3", "python3-pip", "git", "ufw", "fail2ban"]  # Add more as needed
-    subprocess.run(["sudo", "apt", "install", "-y"] + essential_packages)
-
+    update_packages()
 
     # 3. Create a non-root user with sudo privileges
     if input("Do you want to create a new non-root user? (y/n): ").lower() == "y":
-        username = input("Enter a username for the new user: ")
-        subprocess.run(["sudo", "useradd", "-m", "-s", "/bin/bash", username])
-        subprocess.run(["sudo", "adduser", username, "sudo"])
-
+         username = input("Enter a username for the new user: ")
+         create_user(username)
+    
     # 4. Configure SSH (optional)
     if input("Do you want to configure SSH? (y/n): ").lower() == "y":
         # Allow public key authentication, disable password authentication, and other security measures
@@ -52,7 +60,10 @@ def setup_ubuntu_server():
         subprocess.run(["sudo", "ufw", "enable"])
         # Allow necessary ports (SSH, HTTP, HTTPS, etc.)
 
-    # 6. Install additional software (optional)
+    # Install essential packages (example)
+    essential_packages = ["python3", "python3-pip", "git", "ufw", "fail2ban"]
+    install_packages(essential_packages)
+
     # Web server (Apache or Nginx), database (MySQL, PostgreSQL), etc.
 
 if __name__ == "__main__":
