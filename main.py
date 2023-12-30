@@ -39,13 +39,15 @@ def add_public_key_to_authorized_keys(username):
 def configure_ssh():
     """Configures SSH with secure settings, disabling password authentication."""
 
-    # Disable password authentication
-    subprocess.run(["sudo", "sed", "-i", "s/^PasswordAuthentication yes/PasswordAuthentication no/", "/etc/ssh/sshd_config"])
+    # Add lines to sshd_config
+    with open("/etc/ssh/sshd_config", "a") as f:
+        f.write("\nPermitRootLogin no\n")
+        f.write("StrictModes yes\n")
+        f.write("MaxAuthTries 6\n")
+        f.write("MaxSessions 10\n")
+        f.write("PasswordAuthentication no\n")
 
-    # Disable root login
-    subprocess.run(["sudo", "sed", "-i", "s/#PermitRootLogin yes/PermitRootLogin no/", "/etc/ssh/sshd_config"])
-
-    # Disable PAM authentication
+    # Disable PAM authentication (if not already disabled)
     subprocess.run(["sudo", "sed", "-i", "s/^UsePAM yes/UsePAM no/", "/etc/ssh/sshd_config"])
 
     # Implement rate limiting (using UFW)
