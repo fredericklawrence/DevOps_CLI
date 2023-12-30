@@ -72,7 +72,7 @@ def configure_ssh(username):
 
     # Restart SSH service
     subprocess.run(["sudo", "systemctl", "restart", "ssh"])
-    
+
 def setup_ubuntu_server():
     """Performs essential setup tasks, using prompted username."""
 
@@ -90,7 +90,7 @@ def setup_ubuntu_server():
         generate_rsa_key_pair(username)
 
     add_public_key_to_authorized_keys(username)
-    configure_ssh()
+    configure_ssh(username)
 
     display_public_key(username)  # Show the generated public key
 
