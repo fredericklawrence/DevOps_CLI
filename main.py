@@ -36,8 +36,8 @@ def add_public_key_to_authorized_keys(username):
     with open(authorized_keys_path, "a") as authorized_keys:
         authorized_keys.write(public_key + "\n")
 
-def configure_ssh():
-    """Configures SSH with secure settings, disabling password authentication."""
+def configure_ssh(username):
+    """Configures SSH with secure settings and creates .ssh directory if needed."""
 
     # Add lines to sshd_config
     with open("/etc/ssh/sshd_config", "a") as f:
@@ -49,6 +49,12 @@ def configure_ssh():
 
     # Disable PAM authentication (if not already disabled)
     subprocess.run(["sudo", "sed", "-i", "s/^UsePAM yes/UsePAM no/", "/etc/ssh/sshd_config"])
+
+    # Create .ssh directory if it doesn't exist
+    home_dir = "/home/{}".format(username)
+    ssh_dir = os.path.join(home_dir, ".ssh")
+    if not os.path.exists(ssh_dir):
+        os.makedirs(ssh_dir, mode=0o700)  # Set secure permissions
 
     # Implement rate limiting (using UFW)
     subprocess.run(["sudo", "ufw", "limit", "ssh/tcp", "6/min"])
