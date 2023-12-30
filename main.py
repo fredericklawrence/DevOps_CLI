@@ -1,28 +1,26 @@
 import subprocess
 def configure_ssh():
-    """Configures SSH with secure settings."""
-
-    # Allow public key authentication
-    subprocess.run(["sudo", "sed", "-i", "s/#PubkeyAuthentication yes/PubkeyAuthentication yes/", "/etc/ssh/sshd_config"])
+    """Configures SSH with secure settings using UFW."""
 
     # Disable password authentication
     subprocess.run(["sudo", "sed", "-i", "s/PasswordAuthentication yes/PasswordAuthentication no/", "/etc/ssh/sshd_config"])
 
-    # Change SSH port (optional)
-    new_ssh_port = input("Enter a new SSH port (default: 22): ") or "22"
-    subprocess.run(["sudo", "sed", "-i", "s/#Port 22/Port " + new_ssh_port + "/", "/etc/ssh/sshd_config"])
- 
-  # Implement rate limiting (using iptables)
-    subprocess.run(["sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", "22", "-m", "limit", "--limit", "6/min", "--limit-burst", "10", "-j", "ACCEPT"])
+    # Disable root login
+    subprocess.run(["sudo", "sed", "-i", "s/#PermitRootLogin yes/PermitRootLogin no/", "/etc/ssh/sshd_config"])
 
-    # Allow SSH only from private IP ranges
-    subprocess.run(["sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", "22", "-s", "10.0.0.0/8", "-j", "ACCEPT"])
-    subprocess.run(["sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", "22", "-s", "172.16.0.0/12", "-j", "ACCEPT"])
-    subprocess.run(["sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", "22", "-s", "192.168.0.0/16", "-j", "ACCEPT"])
-    subprocess.run(["sudo", "iptables", "-A", "INPUT", "-p", "tcp", "--dport", "22", "-j", "DROP"])  # Drop all other SSH traffic
+    # Implement rate limiting (using UFW)
+    subprocess.run(["sudo", "ufw", "limit", "ssh/tcp", "6/min"])
 
-    # Make iptables rules persistent
-    subprocess.run(["sudo", "sh", "-c", "iptables-save > /etc/iptables/rules.v4"])
+    # Allow SSH only from private IP ranges (using UFW)
+    subprocess.run(["sudo", "ufw", "allow", "from", "10.0.0.0/8", "to", "any", "port", "22"])
+    subprocess.run(["sudo", "ufw", "allow", "from", "172.16.0.0/12", "to", "any", "port", "22"])
+    subprocess.run(["sudo", "ufw", "allow", "from", "192.168.0.0/16", "to", "any", "port", "22"])
+
+    # Deny all other SSH traffic (using UFW)
+    subprocess.run(["sudo", "ufw", "deny", "22"])
+
+    # Enable UFW
+    subprocess.run(["sudo", "ufw", "enable"])
 
     # Restart SSH service
     subprocess.run(["sudo", "systemctl", "restart", "ssh"])
