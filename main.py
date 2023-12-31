@@ -1,105 +1,48 @@
-import subprocess
 import os
+from package_management import update_packages, install_packages
+from user_management import create_user
+from ssh_key_management import generate_rsa_key_pair, display_public_key, add_public_key_to_authorized_keys
+from ssh_configuration import configure_ssh
 
-def update_packages():
-    """Updates package lists and upgrades packages."""
-    subprocess.run(["sudo", "apt", "update"])
-    subprocess.run(["sudo", "apt", "upgrade", "-y"])
+class ServerSetup:
+    def __init__(self, username):
+        self.username = username
 
-def create_user(username):
-    """Creates a new non-root user with sudo privileges."""
-    subprocess.run(["sudo", "useradd", "-m", "-s", "/bin/bash", username])
-    subprocess.run(["sudo", "adduser", username, "sudo"])
+    def update_packages(self):
+        update_packages()
 
-def install_packages(packages):
-    """Installs specified packages."""
-    subprocess.run(["sudo", "apt", "install", "-y"] + packages)
+    def create_user(self):
+        create_user(self.username)
 
-def generate_rsa_key_pair(username):
-    """Generates an RSA key pair for the specified username, creating the .ssh directory if needed."""
+    def generate_rsa_key_pair(self):
+        generate_rsa_key_pair(self.username)
 
-    # Create .ssh directory if it doesn't exist
-    home_dir = "/home/{}".format(username)
-    ssh_dir = os.path.join(home_dir, ".ssh")
-    if not os.path.exists(ssh_dir):
-        os.makedirs(ssh_dir, mode=0o700)  # Set secure permissions
+    def display_public_key(self):
+        display_public_key(self.username)
 
-    # Generate the key pair
-    key_path = os.path.join(ssh_dir, "id_rsa")
-    if not os.path.exists(key_path):
-        subprocess.run(["ssh-keygen", "-t", "rsa", "-b", "4096", "-f", key_path, "-q"])
+    def add_public_key_to_authorized_keys(self):
+        add_public_key_to_authorized_keys(self.username)
 
-def display_public_key(username):
-    """Displays the contents of the public SSH key for the specified username."""
-    public_key_path = "/home/{}/.ssh/id_rsa.pub".format(username)
-    with open(public_key_path, "r") as f:
-        public_key = f.read().strip()
-    print("Public SSH key:\n", public_key)
+    def configure_ssh(self):
+        configure_ssh(self.username)
 
-def add_public_key_to_authorized_keys(username):
-    """Adds the public key to the authorized_keys file for the specified username."""
-    public_key_path = "/home/{}/.ssh/id_rsa.pub".format(username)
-    authorized_keys_path = "/home/{}/.ssh/authorized_keys".format(username)
-    public_key = open(public_key_path).read()
-    with open(authorized_keys_path, "a") as authorized_keys:
-        authorized_keys.write(public_key + "\n")
+    def setup(self):
+        self.update_packages()
 
-def configure_ssh(username):
-    """Configures SSH with secure settings and creates .ssh directory if needed."""
+        create_user_prompt = input("Do you want to create a new non-root user? (y/n): ").lower()
+        if create_user_prompt == "y":
+            self.create_user()
+        else:
+            self.username = input("Enter the username to use for SSH key operations: ")
 
-    # Add lines to sshd_config
-    with open("/etc/ssh/sshd_config", "a") as f:
-        f.write("\nPermitRootLogin no\n")
-        f.write("StrictModes yes\n")
-        f.write("MaxAuthTries 6\n")
-        f.write("MaxSessions 10\n")
-        f.write("PasswordAuthentication no\n")
+        # RSA key generation and authentication
+        self.generate_rsa_key_pair()
+        self.add_public_key_to_authorized_keys()
 
-    # Disable PAM authentication (if not already disabled)
-    subprocess.run(["sudo", "sed", "-i", "s/^UsePAM yes/UsePAM no/", "/etc/ssh/sshd_config"])
+        self.configure_ssh()
 
-    # Create .ssh directory if it doesn't exist
-    home_dir = "/home/{}".format(username)
-    ssh_dir = os.path.join(home_dir, ".ssh")
-    if not os.path.exists(ssh_dir):
-        os.makedirs(ssh_dir, mode=0o700)  # Set secure permissions
-
-    # Implement rate limiting (using UFW)
-    subprocess.run(["sudo", "ufw", "limit", "ssh/tcp", "6/min"])
-
-    # Allow SSH only from private IP ranges (adjust as needed)
-    subprocess.run(["sudo", "ufw", "allow", "from", "10.0.0.0/8", "to", "any", "port", "22"])
-    subprocess.run(["sudo", "ufw", "allow", "from", "172.16.0.0/12", "to", "any", "port", "22"])
-    subprocess.run(["sudo", "ufw", "allow", "from", "192.168.0.0/16", "to", "any", "port", "22"])
-
-    # Deny all other SSH traffic
-    subprocess.run(["sudo", "ufw", "deny", "22"])
-
-    # Enable UFW
-    subprocess.run(["sudo", "ufw", "enable"])
-
-    # Restart SSH service
-    subprocess.run(["sudo", "systemctl", "restart", "ssh"])
-
-def setup_ubuntu_server():
-    """Performs essential setup tasks, using prompted username."""
-
-    update_packages()
-
-    create_user_prompt = input("Do you want to create a new non-root user? (y/n): ").lower()
-    if create_user_prompt == "y":
-        username = input("Enter a username for the new user: ")
-        create_user(username)
-    else:
-        username = input("Enter the username to use for SSH key operations: ")
-
-    # RSA key generation and authentication
-    generate_rsa_key_pair(username)  # Generate key pair first
-    add_public_key_to_authorized_keys(username)  # Then access the public key
-
-    configure_ssh(username)
-
-    display_public_key(username)  # Show the generated public key
+        self.display_public_key()
 
 if __name__ == "__main__":
-    setup_ubuntu_server()
+    setup = ServerSetup(None)  # Initialize with None for initial username prompt
+    setup.setup()
