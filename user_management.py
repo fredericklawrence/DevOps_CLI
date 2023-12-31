@@ -1,4 +1,4 @@
-import subprocess
+from utils import subprocess
 
 def create_user(username):
     """Creates a new non-root user with sudo privileges."""

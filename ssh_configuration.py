@@ -1,5 +1,14 @@
 from utils import subprocess, os
 
+def check_and_install_ssh_server():
+    """Checks if the SSH server is installed, installing it if necessary."""
+    process = subprocess.run(["which", "sshd"], capture_output=True, text=True)
+    if process.returncode != 0:
+        print("SSH server not found. Installing...")
+        subprocess.run(["sudo", "apt", "install", "-y", "openssh-server"])
+        print("SSH server installed successfully.")
+    else:
+        print("SSH server already installed.")
 
 def configure_ssh(username):
     """Configures SSH with secure settings and creates .ssh directory if needed."""
