@@ -1,18 +1,38 @@
-import os
 from package_management import update_packages, install_packages
 from user_management import create_user
 from ssh_key_management import generate_rsa_key_pair, display_public_key, add_public_key_to_authorized_keys
-from ssh_configuration import check_and_install_ssh_server, configure_ssh
+from ssh_configuration import configure_ssh
+
+class ConfigurationContext:
+    def __init__(self, choice):
+        self.choice = choice
+
+def get_configuration_context():
+    global choice  # Assuming choice is still a global variable for now
+    return ConfigurationContext(choice)
 
 class ServerSetup:
     def __init__(self):
-        create_user_prompt = input("Do you want to create a new non-root user? (y/n): ").lower()
-        if create_user_prompt == "y":
-            self.username = input("Enter a username for the new user: ")
-            self.create_user()  # Create the user directly
-        else:
-            self.username = input("Enter the username to use for SSH key operations: ")
+        while True:
+            print("Main Menu:")
+            print("1. Initial Setup")
+            print("2. Normal Operations")
+            choice = input("Enter your choice (1 or 2): ")
+            if choice in ["1", "2"]:
+                break
+            else:
+                print("Invalid choice. Please enter 1 or 2.")
 
+        self.choice = choice
+    
+    create_user_prompt = input("Do you want to create a new non-root user? (y/n): ").lower()
+    if create_user_prompt == "y":
+        self.username = input("Enter a username for the new user: ")
+        create_user(self.username)  # Create the user directly # Call the imported function
+    else:
+        self.username = input("Enter the username to use for SSH key operations: ")
+
+"""""
     def update_packages(self):
         update_packages()
 
@@ -31,17 +51,18 @@ class ServerSetup:
     def configure_ssh(self):
         configure_ssh(self.username)
 
-
-    def setup(self):
+"""
+def setup(self):
+        context = get_configuration_context()
         self.update_packages()
+        self.check_and_install_ssh_server() 
 
         # RSA key generation and authentication
         self.generate_rsa_key_pair()
         self.add_public_key_to_authorized_keys()
 
-        self.check_and_install_ssh_server()
-
-        self.configure_ssh()
+        if context.choice == "1":
+            self.configure_ssh()
 
         self.display_public_key()
 
