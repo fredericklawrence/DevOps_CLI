@@ -1,7 +1,7 @@
 from package_management import update_packages, install_packages
 from user_management import create_user
 from ssh_key_management import generate_rsa_key_pair, display_public_key, add_public_key_to_authorized_keys
-from ssh_configuration import configure_ssh
+from ssh_configuration import check_and_install_ssh_server, configure_ssh
 
 class ConfigurationContext:
     def __init__(self, choice):
@@ -24,15 +24,17 @@ class ServerSetup:
                 print("Invalid choice. Please enter 1 or 2.")
 
         self.choice = choice
-    
-    create_user_prompt = input("Do you want to create a new non-root user? (y/n): ").lower()
-    if create_user_prompt == "y":
-        self.username = input("Enter a username for the new user: ")
-        create_user(self.username)  # Create the user directly # Call the imported function
-    else:
-        self.username = input("Enter the username to use for SSH key operations: ")
 
-"""""
+    def get_username(self):
+        while True:
+            create_user_prompt = input("Do you want to create a new non-root user? (y/n): ").lower()
+            if create_user_prompt == "y":
+                self.username = input("Enter a username for the new user: ")
+                create_user(self.username)
+                break  # exit the loop after setting a valid username
+            else:
+                self.username = input("Enter the username to use for SSH key operations: ")
+                break  # exit the loop after setting a valid username            
     def update_packages(self):
         update_packages()
 
@@ -50,10 +52,10 @@ class ServerSetup:
 
     def configure_ssh(self):
         configure_ssh(self.username)
-
-"""
-def setup(self):
-        context = get_configuration_context()
+        
+    def setup(self):
+        context = ConfigurationContext(self.choice)  # Pass choice directly
+        self.get_username()  # Call get_username before other methods
         self.update_packages()
         self.check_and_install_ssh_server() 
 
