@@ -1,1 +1,1 @@
-Shell script for automating linux server provisioning efficiency. 
+Shell-based automation tool designed to streamline Linux server provisioning, configuration, and management tasks. It provides a suite of commands that simplify complex server setup processes, including user management, SSH key configuration, package installation, and general server configuration.
